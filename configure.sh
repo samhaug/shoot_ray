@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc ~/src/xh_src/vincenty/vincenty_sphere.c shoot_ray.c -o shoot_ray -lm
+gcc ~/src/xh_src/vincenty/vincenty.c shoot_ray_cli.c -o xshoot_ray -lm

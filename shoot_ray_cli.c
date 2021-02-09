@@ -20,8 +20,8 @@ int prepare_model(FILE *fp, double rad[], double vp[], double vs[], int *num);
 
 int main(int argc, char **argv){
    FILE *fp; 
-   fp = fopen("smoothprem_nodensity_flip.txt","r");
-   //fp = fopen("interp_prem.txt","r");
+   //fp = fopen("smoothprem_nodensity_flip.txt","r");
+   fp = fopen("interp_prem.txt","r");
    double rad[ARR_SIZE];
    double vp[ARR_SIZE];
    double vs[ARR_SIZE];
@@ -80,9 +80,9 @@ int main(int argc, char **argv){
          fprintf(stderr,"Problem with ray shooting\n");
          exit(1);
       }
-      //vincenty_direct_sphere(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
-      //           1000*.p_ray.radius, &lat_2, &lon_2, &alpha21);
-      printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
+      vincenty_direct(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
+                 &lat_2, &lon_2, &alpha21);
+      printf("%8.2lf %8.2lf %8.2lf %8.2lf\n",lat_2, lon_2, p_ray.radius, p_ray.time);
       //printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
       //lat_1 = lat_2;
       //lon_1 = lon_2;
@@ -98,12 +98,12 @@ int main(int argc, char **argv){
          fprintf(stderr,"Problem with ray shooting\n");
          exit(1);
       }
-      //vincenty_direct_sphere(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
-      //         1000.*p_ray.radius, &lat_2, &lon_2, &alpha21);
-      //printf("%8.2lf %8.2lf %8.2lf %8.2lf\n",lat_2, lon_2, p_ray.radius, p_ray.time);
+      vincenty_direct(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
+                &lat_2, &lon_2, &alpha21);
+      printf("%8.2lf %8.2lf %8.2lf %8.2lf\n",lat_2, lon_2, p_ray.radius, p_ray.time);
       //lat_1 = lat_2;
       //lon_1 = lon_2;
-      printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
+      //printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
       i=i-1;
    }
 
