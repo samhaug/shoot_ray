@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "ray.h"
 #define ARR_SIZE 60000
+#define M_PI 3.141592654
 #define deg2rad M_PI/180.
 #define rad2deg 180./M_PI
 
@@ -14,46 +15,25 @@
 
 int jdebug = 0;
 
-int usage();
 int shoot(struct Ray *ray, double new_rad, double new_vel);
 int prepare_model(FILE *fp, double rad[], double vp[], double vs[], int *num);
 
-int main(int argc, char **argv){
-   FILE *fp; 
-   //fp = fopen("smoothprem_nodensity_flip.txt","r");
-   fp = fopen("interp_prem.txt","r");
-   double rad[ARR_SIZE];
-   double vp[ARR_SIZE];
-   double vs[ARR_SIZE];
+int vincenty_direct(double,double,double,double,double *,double *,double *);
+int shoot_ray(double rad[], double vp[], double vs[],  double angle, double start_rad, 
+              double end_rad, double lat_1, double lon_1,
+              double bearing, int *ray_count, double lat_list[], double lon_list[], 
+              double dep_list[], double time_list[]);
+
+int shoot_ray(double rad[], double vp[], double vs[], double angle, double start_rad, 
+              double end_rad, double lat_1, double lon_1,
+              double bearing, int *ray_count, double lat_list[], double lon_list[], 
+              double dep_list[], double time_list[]){
+
+
    //initialize ray for P velocity
    struct Ray p_ray;
    //initialize ray for S velocity
    //struct Ray s_ray;
-   int num=0;
-
-   if (!prepare_model(fp, rad, vp, vs, &num)){
-      fprintf(stderr,"Problem with prepare_model\n");
-      exit(1);
-   } 
-   
-   if ( argc != 7 ){
-      usage();
-      exit(1);
-   }
-
-   // Starting incidence angle
-   double angle = atof(argv[1]);
-   // Starting radius
-   double start_rad = atof(argv[2]);
-   // Ending radius
-   double end_rad = atof(argv[3]);
-   // Starting latitude
-   double lat_1 = atof(argv[4]);
-   // Starting longitude
-   double lon_1 = atof(argv[5]);
-   // bearing CW from north
-   double bearing = atof(argv[6]);
-
    double lat_2, lon_2, alpha21;
 
    //Find index of start_rad
@@ -84,12 +64,16 @@ int main(int argc, char **argv){
       if (p_ray.radius < 3400.) return 0;
       vincenty_direct(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
                  &lat_2, &lon_2, &alpha21);
-      printf("%8.2lf %8.2lf %8.2lf %8.2lf\n",lat_2, lon_2, p_ray.radius, p_ray.time);
-      //printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
-      //lat_1 = lat_2;
-      //lon_1 = lon_2;
+      lat_list[*ray_count] = lat_2;
+      lon_list[*ray_count] = lon_2;
+      dep_list[*ray_count] = p_ray.radius;
+      time_list[*ray_count] = p_ray.time;
+      *ray_count = *ray_count+1;
       i++;
+
    }
+
+   if (jdebug) printf("Ray turns\n");
 
    p_ray.angle = 180.-p_ray.angle;
    i=i-1;
@@ -102,12 +86,14 @@ int main(int argc, char **argv){
       }
       vincenty_direct(lat_1, lon_1 , bearing, 111195.*rad2deg*p_ray.dist, 
                 &lat_2, &lon_2, &alpha21);
-      printf("%8.2lf %8.2lf %8.2lf %8.2lf\n",lat_2, lon_2, p_ray.radius, p_ray.time);
-      //lat_1 = lat_2;
-      //lon_1 = lon_2;
-      //printf("%8.2lf %8.2lf %8.2lf\n", rad2deg*p_ray.dist, p_ray.radius, p_ray.time);
+      lat_list[*ray_count] = lat_2;
+      lon_list[*ray_count] = lon_2;
+      dep_list[*ray_count] = p_ray.radius;
+      *ray_count = *ray_count+1;
       i=i-1;
    }
+
+return 0;
 
 }
 
@@ -120,7 +106,7 @@ int prepare_model(FILE *fp, double rad[], double vp[], double vs[], int *num){
     if (!fscanf(fp,"%lf %lf %lf",rad+*num, vp+*num, vs+*num)){
       fprintf(stderr,"Error reading input model file\n");
     }
-    if (jdebug) fprintf(stderr,"%3d %lf %lf %lf \n",*num,rad[*num],vp[*num],vs[*num]);
+    //if (jdebug) fprintf(stderr,"%3d %lf %lf %lf \n",*num,rad[*num],vp[*num],vs[*num]);
     (*num)+=1;
   }
   return 1;
@@ -145,22 +131,5 @@ int shoot(struct Ray *ray, double new_rad, double new_vel){
     ray->angle = rad2deg*(ray->angle_rad);
     return 1;
 }
-
-
-int usage(){
-    fprintf(stderr," \n");
-    fprintf(stderr,"USAGE : shoot_ray takeoff_angle r1 r2 lat lon az\n");
-    fprintf(stderr," \n");
-    fprintf(stderr,"takeoff_angle: Takeoff angle (degrees) from vertical \n");
-    fprintf(stderr,"lat/lon: starting coordiantes \n");
-    fprintf(stderr,"az: Azimuth (cw from north) \n");
-    fprintf(stderr,"r1: Starting radius (km) \n");
-    fprintf(stderr,"r2: Ending radius (km) \n");
-    fprintf(stderr," \n");
-    exit(1);
-}
-
-
-
 
 
